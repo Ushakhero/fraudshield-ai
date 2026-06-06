@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FraudShield AI — Fraud Detection for Financial Institutions</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050810;
+    --surface: #0d1117;
+    --surface2: #161b27;
+    --surface3: #1e2535;
+    --border: #252d3d;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+    --safe: #10b981;
+    --text: #e8edf5;
+    --muted: #6b7a99;
+    --glow: 0 0 30px rgba(0,229,255,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glowing orb */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1280px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* Header */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 0;
+    background: rgba(5,8,16,0.8);
+    backdrop-filter: blur(20px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 0 20px rgba(0,229,255,0.3);
+  }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-text span { color: var(--accent); }
+
+  .badge {
+    background: rgba(0,229,255,0.1);
+    border: 1px solid rgba(0,229,255,0.3);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 60px 0 40px;
+    text-align: center;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(124,58,237,0.15);
+    border: 1px solid rgba(124,58,237,0.3);
+    color: #a78bfa;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    padding: 6px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 .highlight {
+    background: linear-gradient(135deg, var(--accent), #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    color: var(--muted);
+    font-size: 17px;
+    max-width: 560px;
+    margin: 0 auto 32px;
+    line-height: 1.6;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    width: fit-content;
+    margin: 0 auto 40px;
+  }
+
+  .tab {
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .tab.active {
+    background: var(--surface3);
+    color: var(--text);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover { border-color: rgba(0,229,255,0.3); }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0.6;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  .stat-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Main grid */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+
+  /* Form card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .field input, .field select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'DM Mono', monospace;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.1);
+  }
+
+  .field select option { background: var(--surface2); }
+
+  .btn-analyze {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), #00b4cc);
+    border: none;
+    border-radius: 12px;
+    color: #050810;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-analyze:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(0,229,255,0.3);
+  }
+
+  .btn-analyze:active { transform: translateY(0); }
+
+  /* Result panel */
+  .result-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 20px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .verdict {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+  }
+
+  .risk-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+  }
+
+  .score-bar-wrap { margin-bottom: 16px; }
+
+  .score-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .score-bar {
+    height: 8px;
+    background: var(--surface3);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .score-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .factors-title {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+
+  .factor-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .factor-item:last-child { border-bottom: none; }
+
+  .factor-pct {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  /* Transactions table */
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(37,45,61,0.5);
+    transition: background 0.15s;
+  }
+
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  td {
+    padding: 12px 16px;
+    font-family: 'DM Mono', monospace;
+    white-space: nowrap;
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  .pill-high { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+  .pill-medium { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+  .pill-low { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+  .pill-fraud { background: rgba(239,68,68,0.2); color: #f87171; }
+  .pill-legit { background: rgba(16,185,129,0.2); color: #34d399; }
+
+  /* Upload area */
+  .upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 20px;
+  }
+
+  .upload-area:hover {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.03);
+  }
+
+  .upload-icon { font-size: 40px; margin-bottom: 12px; }
+
+  .upload-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .upload-sub { color: var(--muted); font-size: 13px; }
+
+  #fileInput { display: none; }
+
+  .btn-secondary {
+    padding: 10px 20px;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 8px;
+  }
+
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  /* Loader */
+  .loader {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(5,8,16,0.3);
+    border-top-color: #050810;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Batch results */
+  .batch-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .summary-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .summary-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .summary-label { font-size: 12px; color: var(--muted); }
+
+  /* Pulse animation for live indicator */
+  .live-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--safe);
+    border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+  }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 0;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 40px;
+  }
+
+  footer strong { color: var(--accent); }
+
+  @media (max-width: 768px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .main-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .batch-summary { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">🛡️</div>
+        <div class="logo-text">Fraud<span>Shield</span> AI</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="font-size:13px; color:var(--muted);"><span class="live-dot"></span>Model Active</span>
+        <span class="badge">MVP v1.0</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+
+    <div class="hero">
+      <div class="hero-tag">🌍 Built for Africa · Powered by AI</div>
+      <h1>Detect Fraud Before<br>It Costs You <span class="highlight">Millions</span></h1>
+      <p>AI-powered real-time fraud detection for African financial institutions. Protect your customers. Build trust. Scale confidently.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Model Accuracy</div>
+        <div class="stat-value" style="color:var(--safe)">99.8%</div>
+        <div class="stat-sub">On test dataset</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Fraud Recall</div>
+        <div class="stat-value" style="color:var(--accent)">98%</div>
+        <div class="stat-sub">Fraud cases caught</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Analysis Speed</div>
+        <div class="stat-value" style="color:#a78bfa">&lt;50ms</div>
+        <div class="stat-sub">Per transaction</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Training Data</div>
+        <div class="stat-value">10K+</div>
+        <div class="stat-sub">Transactions modeled</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('single')">Single Transaction</button>
+      <button class="tab" onclick="switchTab('batch')">Batch Upload</button>
+      <button class="tab" onclick="switchTab('demo')">Live Demo</button>
+    </div>
+
+    <!-- Single Transaction Tab -->
+    <div id="tab-single" class="tab-content active">
+      <div class="main-grid">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span> Analyze Transaction</div>
+          <div class="form-grid">
+            <div class="field">
+              <label>Amount (₦)</label>
+              <input type="number" id="amount" value="25000" min="0">
+            </div>
+            <div class="field">
+              <label>Hour of Day</label>
+              <input type="number" id="hour" value="14" min="0" max="23">
+            </div>
+            <div class="field">
+              <label>Day of Week</label>
+              <select id="day_of_week">
+                <option value="0">Monday</option>
+                <option value="1">Tuesday</option>
+                <option value="2">Wednesday</option>
+                <option value="3">Thursday</option>
+                <option value="4" selected>Friday</option>
+                <option value="5">Saturday</option>
+                <option value="6">Sunday</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Transactions Today</label>
+              <input type="number" id="num_transactions_today" value="3" min="0">
+            </div>
+            <div class="field">
+              <label>Avg. Txn Amount (₦)</label>
+              <input type="number" id="avg_transaction_amount" value="18000" min="0">
+            </div>
+            <div class="field">
+              <label>Account Age (Days)</label>
+              <input type="number" id="account_age_days" value="365" min="0">
+            </div>
+            <div class="field">
+              <label>Failed Attempts</label>
+              <input type="number" id="failed_attempts" value="0" min="0" max="10">
+            </div>
+            <div class="field">
+              <label>International?</label>
+              <select id="is_international">
+                <option value="0" selected>No</option>
+                <option value="1">Yes</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>New Device?</label>
+              <select id="device_change">
+                <option value="0" selected>No</option>
+                <option value="1">Yes</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Location Change?</label>
+              <select id="location_change">
+                <option value="0" selected>No</option>
+                <option value="1">Yes</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-analyze" onclick="analyzeSingle()" id="analyzeBtn">
+            Analyze Transaction →
+          </button>
+
+          <div class="result-panel" id="resultPanel">
+            <div class="result-header">
+              <div class="verdict" id="verdictText"></div>
+              <div class="risk-badge" id="riskBadge"></div>
+            </div>
+            <div class="score-bar-wrap">
+              <div class="score-label">
+                <span>Fraud Probability</span>
+                <span id="scoreText">0%</span>
+              </div>
+              <div class="score-bar">
+                <div class="score-fill" id="scoreFill" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="factors-title">Top Risk Factors</div>
+            <div id="factorsList"></div>
+            <div style="font-size:11px; color:var(--muted); margin-top:12px; font-family:'DM Mono',monospace;" id="timestamp"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><span class="dot"></span> Quick Test Scenarios</div>
+          <p style="color:var(--muted); font-size:13px; margin-bottom:16px;">Click a scenario to auto-fill and analyze</p>
+
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div onclick="loadScenario('legit')" style="cursor:pointer; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:16px; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--safe)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-weight:600; font-size:14px;">✅ Legitimate Payment</span>
+                <span class="pill pill-low">LOW RISK</span>
+              </div>
+              <span style="font-size:12px; color:var(--muted);">₦15,000 · Business hours · Regular device · Local</span>
+            </div>
+
+            <div onclick="loadScenario('suspicious')" style="cursor:pointer; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:16px; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--warn)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-weight:600; font-size:14px;">⚠️ Suspicious Activity</span>
+                <span class="pill pill-medium">MEDIUM RISK</span>
+              </div>
+              <span style="font-size:12px; color:var(--muted);">₦85,000 · Late night · New device · International</span>
+            </div>
+
+            <div onclick="loadScenario('fraud')" style="cursor:pointer; background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:16px; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--danger)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-weight:600; font-size:14px;">🚨 Likely Fraud</span>
+                <span class="pill pill-high">HIGH RISK</span>
+              </div>
+              <span style="font-size:12px; color:var(--muted);">₦450,000 · 2AM · New account · Multiple fails</span>
+            </div>
+          </div>
+
+          <div style="margin-top:24px; background:var(--surface2); border-radius:12px; padding:16px; border:1px solid var(--border);">
+            <div style="font-size:12px; color:var(--muted); font-family:'DM Mono',monospace; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;">How It Works</div>
+            <div style="display:flex; flex-direction:column; gap:8px; font-size:13px; color:var(--muted);">
+              <div>🔍 <strong style="color:var(--text);">Input</strong> — Transaction details are submitted</div>
+              <div>🤖 <strong style="color:var(--text);">AI Analysis</strong> — Random Forest model evaluates 10 features</div>
+              <div>📊 <strong style="color:var(--text);">Risk Score</strong> — Fraud probability calculated (0–100%)</div>
+              <div>🚦 <strong style="color:var(--text);">Decision</strong> — LOW / MEDIUM / HIGH risk verdict returned</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Batch Tab -->
+    <div id="tab-batch" class="tab-content">
+      <div class="card">
+        <div class="card-title"><span class="dot"></span> Batch Transaction Analysis</div>
+        <p style="color:var(--muted); font-size:13px; margin-bottom:20px;">Upload a CSV file with transaction data to analyze multiple transactions at once.</p>
+
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon">📂</div>
+          <div class="upload-title">Drop your CSV file here</div>
+          <div class="upload-sub">or click to browse · Supports up to 10,000 rows</div>
+          <input type="file" id="fileInput" accept=".csv" onchange="handleFileUpload(event)">
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <button class="btn-secondary" onclick="downloadSample()">⬇ Download Sample CSV</button>
+          <span style="font-size:12px; color:var(--muted);">Use this as a template for your data</span>
+        </div>
+
+        <div id="batchResults" style="display:none;">
+          <div class="batch-summary" id="batchSummary"></div>
+          <div class="table-wrap">
+            <table id="batchTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Amount (₦)</th>
+                  <th>Fraud Score</th>
+                  <th>Risk Level</th>
+                  <th>Verdict</th>
+                </tr>
+              </thead>
+              <tbody id="batchTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo Tab -->
+    <div id="tab-demo" class="tab-content">
+      <div class="card">
+        <div class="card-title"><span class="dot"></span> Live Demo — Pre-analyzed Transactions</div>
+        <p style="color:var(--muted); font-size:13px; margin-bottom:20px;">Sample transactions analyzed by the AI model in real-time.</p>
+        <button class="btn-analyze" style="width:auto; padding:12px 28px; margin-bottom:24px;" onclick="loadDemo()">
+          Run Demo Analysis →
+        </button>
+        <div id="demoResults" style="display:none;">
+          <div class="batch-summary" id="demoSummary"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Amount (₦)</th>
+                  <th>Hour</th>
+                  <th>Txns Today</th>
+                  <th>Intl?</th>
+                  <th>Fraud Score</th>
+                  <th>Risk</th>
+                  <th>Verdict</th>
+                </tr>
+              </thead>
+              <tbody id="demoTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <p>FraudShield AI · Built for the <strong>Cyber4Africa Programme</strong> · Powered by Random Forest ML · 🌍 Made in Africa</p>
+  </div>
+</footer>
+
+<script>
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  const scenarios = {
+    legit: { amount: 15000, hour: 14, day_of_week: 2, num_transactions_today: 4,
+              avg_transaction_amount: 12000, account_age_days: 730, failed_attempts: 0,
+              is_international: 0, device_change: 0, location_change: 0 },
+    suspicious: { amount: 85000, hour: 23, day_of_week: 5, num_transactions_today: 12,
+                  avg_transaction_amount: 8000, account_age_days: 45, failed_attempts: 1,
+                  is_international: 1, device_change: 1, location_change: 1 },
+    fraud: { amount: 450000, hour: 2, day_of_week: 6, num_transactions_today: 25,
+             avg_transaction_amount: 5000, account_age_days: 7, failed_attempts: 3,
+             is_international: 1, device_change: 1, location_change: 1 }
+  };
+
+  function loadScenario(type) {
+    const s = scenarios[type];
+    Object.keys(s).forEach(k => {
+      const el = document.getElementById(k);
+      if (el) el.value = s[k];
+    });
+    analyzeSingle();
+  }
+
+  async function analyzeSingle() {
+    const btn = document.getElementById('analyzeBtn');
+    btn.innerHTML = '<span class="loader"></span>Analyzing...';
+    btn.disabled = true;
+
+    const fields = ['amount','hour','day_of_week','num_transactions_today',
+                    'avg_transaction_amount','account_age_days','failed_attempts',
+                    'is_international','device_change','location_change'];
+    const data = {};
+    fields.forEach(f => data[f] = parseFloat(document.getElementById(f).value) || 0);
+
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
+      showResult(result);
+    } catch(e) {
+      alert('Error: ' + e.message);
+    }
+
+    btn.innerHTML = 'Analyze Transaction →';
+    btn.disabled = false;
+  }
+
+  function showResult(r) {
+    const panel = document.getElementById('resultPanel');
+    panel.style.display = 'block';
+
+    document.getElementById('verdictText').textContent = r.is_fraud ? '🚨 FRAUD DETECTED' : '✅ LEGITIMATE';
+    document.getElementById('verdictText').style.color = r.is_fraud ? '#ef4444' : '#10b981';
+
+    const badge = document.getElementById('riskBadge');
+    badge.textContent = r.risk_level + ' RISK';
+    badge.style.background = r.risk_color + '22';
+    badge.style.color = r.risk_color;
+    badge.style.border = `1px solid ${r.risk_color}55`;
+
+    document.getElementById('scoreText').textContent = r.fraud_score + '%';
+    const fill = document.getElementById('scoreFill');
+    setTimeout(() => {
+      fill.style.width = r.fraud_score + '%';
+      fill.style.background = `linear-gradient(90deg, ${r.risk_color}, ${r.risk_color}aa)`;
+    }, 50);
+
+    const factors = document.getElementById('factorsList');
+    factors.innerHTML = r.top_factors.map(f =>
+      `<div class="factor-item">
+        <span>${f.feature}</span>
+        <span class="factor-pct">${f.importance}% weight</span>
+      </div>`
+    ).join('');
+
+    document.getElementById('timestamp').textContent = '⏱ Analyzed at ' + r.timestamp;
+  }
+
+  async function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch('/api/batch', { method: 'POST', body: formData });
+      const data = await res.json();
+      showBatchResults(data);
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+
+  function showBatchResults(data) {
+    document.getElementById('batchResults').style.display = 'block';
+    document.getElementById('batchSummary').innerHTML = `
+      <div class="summary-card">
+        <div class="summary-num">${data.total}</div>
+        <div class="summary-label">Total Transactions</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" style="color:var(--danger)">${data.fraud_count}</div>
+        <div class="summary-label">Fraud Detected</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" style="color:var(--safe)">${data.legitimate_count}</div>
+        <div class="summary-label">Legitimate</div>
+      </div>`;
+
+    const tbody = document.getElementById('batchTableBody');
+    tbody.innerHTML = data.results.map((r, i) => `
+      <tr>
+        <td style="color:var(--muted)">${i+1}</td>
+        <td>₦${Number(r.amount).toLocaleString()}</td>
+        <td><span style="color:${r.risk_level==='HIGH'?'#ef4444':r.risk_level==='MEDIUM'?'#f59e0b':'#10b981'}">${r.fraud_score}%</span></td>
+        <td><span class="pill pill-${r.risk_level.toLowerCase()}">${r.risk_level}</span></td>
+        <td><span class="pill ${r.prediction===1?'pill-fraud':'pill-legit'}">${r.prediction===1?'FRAUD':'LEGIT'}</span></td>
+      </tr>`).join('');
+  }
+
+  async function loadDemo() {
+    try {
+      const res = await fetch('/api/demo');
+      const data = await res.json();
+      document.getElementById('demoResults').style.display = 'block';
+      document.getElementById('demoSummary').innerHTML = `
+        <div class="summary-card">
+          <div class="summary-num">${data.total}</div>
+          <div class="summary-label">Transactions Analyzed</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-num" style="color:var(--danger)">${data.fraud_count}</div>
+          <div class="summary-label">Fraud Flagged</div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-num" style="color:var(--safe)">${data.legitimate_count}</div>
+          <div class="summary-label">Legitimate</div>
+        </div>`;
+
+      const tbody = document.getElementById('demoTableBody');
+      tbody.innerHTML = data.results.map((r, i) => `
+        <tr>
+          <td style="color:var(--muted)">${i+1}</td>
+          <td>₦${Number(r.amount).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
+          <td>${r.hour}:00</td>
+          <td>${r.num_transactions_today}</td>
+          <td>${r.is_international ? '🌍 Yes' : '🏠 No'}</td>
+          <td><span style="color:${r.risk_level==='HIGH'?'#ef4444':r.risk_level==='MEDIUM'?'#f59e0b':'#10b981'}">${r.fraud_score}%</span></td>
+          <td><span class="pill pill-${r.risk_level.toLowerCase()}">${r.risk_level}</span></td>
+          <td><span class="pill ${r.prediction===1?'pill-fraud':'pill-legit'}">${r.prediction===1?'FRAUD':'LEGIT'}</span></td>
+        </tr>`).join('');
+    } catch(e) { alert('Error: ' + e.message); }
+  }
+
+  function downloadSample() {
+    const csv = `amount,hour,day_of_week,num_transactions_today,avg_transaction_amount,account_age_days,failed_attempts,is_international,device_change,location_change
+25000,14,2,3,18000,365,0,0,0,0
+450000,2,6,25,5000,7,3,1,1,1
+8500,10,1,2,9000,1200,0,0,0,0
+120000,23,5,18,7000,30,2,1,1,1
+15000,9,3,5,14000,500,0,0,0,0`;
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'sample_transactions.csv';
+    a.click();
+  }
+</script>
+</body>
+</html>
